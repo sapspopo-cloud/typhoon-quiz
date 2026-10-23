@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>薔琵颱風：防颱物資大作戰！</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b132b;
+            --card-bg: #1c2541;
+            --accent-color: #48cae4;
+            --danger-color: #ff4d6d;
+            --success-color: #38b000;
+            --warning-color: #ffb703;
+            --text-light: #f8f9fa;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            overflow-x: hidden;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 15px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            color: var(--accent-color);
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .subtitle {
+            font-size: 0.95rem;
+            color: #90e0ef;
+            margin-bottom: 8px;
+        }
+
+        .news-flash {
+            background: rgba(255, 183, 3, 0.15);
+            border: 1px solid var(--warning-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            color: #ffe6a7;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .game-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        .status-badge {
+            background: rgba(72, 202, 228, 0.2);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+            gap: 10px;
+            min-height: 280px;
+        }
+
+        .item-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 10px 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            transition: all 0.2s ease;
+        }
+
+        .item-card:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent-color);
+        }
+
+        .item-card:active {
+            cursor: grabbing;
+        }
+
+        .item-emoji {
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+        }
+
+        .item-name {
+            font-size: 0.8rem;
+            text-align: center;
+            word-break: break-all;
+        }
+
+        .backpack-zone {
+            background: rgba(0, 0, 0, 0.2);
+            border: 2px dashed rgba(72, 202, 228, 0.4);
+            border-radius: 16px;
+            min-height: 280px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            padding: 12px;
+            position: relative;
+        }
+
+        .backpack-zone.drag-over {
+            background: rgba(72, 202, 228, 0.15);
+            border-color: var(--accent-color);
+        }
+
+        .slot {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            min-height: 80px;
+        }
+
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-submit {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-submit:hover {
+            background: #2b8a00;
+        }
+
+        .btn-reset {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+        }
+
+        .btn-reset:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            padding: 20px;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: var(--card-bg);
+            border: 2px solid var(--accent-color);
+            border-radius: 20px;
+            padding: 25px;
+            max-width: 450px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .score-num {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: var(--warning-color);
+            margin: 10px 0;
+        }
+
+        .feedback-text {
+            font-size: 1rem;
+            color: #d8f3dc;
+            margin-bottom: 20px;
+            line-height: 1.5;
+            text-align: left;
+            background: rgba(0,0,0,0.2);
+            padding: 12px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🌀 薔琵颱風：防颱物資大作戰！</h1>
+        <p class="subtitle">將最有用的防颱物資拖放入「防颱背包」中（上限 8 件物資）</p>
+        <div class="news-flash">
+            📢 10/23 薔琵進逼！台東轉宣布停班課，全台僅金門正常上班課。請做足防颱準備！
+        </div>
+    </header>
+
+    <main class="game-container">
+        <section class="panel">
+            <div class="panel-header">
+                <span class="panel-title">📦 可選物資庫</span>
+                <span class="status-badge">請拖拽物資</span>
+            </div>
+            <div class="items-grid" id="itemsGrid"></div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <span class="panel-title">🎒 防颱避難包</span>
+                <span class="status-badge" id="countBadge">已裝 0 / 8</span>
+            </div>
+            <div class="backpack-zone" id="backpackZone">
+                <div class="slot"></div>
+                <div class="slot"></div>
+                <div class="slot"></div>
+                <div class="slot"></div>
+                <div class="slot"></div>
+                <div class="slot"></div>
+                <div class="slot"></div>
+                <div class="slot"></div>
+            </div>
+            <div class="controls">
+                <button class="btn btn-reset" onclick="resetGame()">重置背包</button>
+                <button class="btn btn-submit" onclick="evaluateBackpack()">打包完成！結算得分</button>
+            </div>
+        </section>
+    </main>
+
+    <div class="modal" id="resultModal">
+        <div class="modal-card">
+            <h2 style="color: var(--accent-color);">防颱整備報告</h2>
+            <div class="score-num" id="scoreDisplay">0分</div>
+            <div class="feedback-text" id="feedbackDisplay"></div>
+            <button class="btn btn-submit" onclick="closeModal()">再挑戰一次</button>
+        </div>
+    </div>
+
+    <script>
+        const items = [
+            { id: 1, name: "瓶裝水", emoji: "💧", correct: true, desc: "維持生命必備，颱風天可能停水。" },
+            { id: 2, name: "乾糧罐頭", emoji: "🥫", correct: true, desc: "保存期限長，停電時不需加熱即可食用。" },
+            { id: 3, name: "手電筒", emoji: "🔦", correct: true, desc: "強風豪雨易導致停電，照明極為重要。" },
+            { id: 4, name: "急救包", emoji: "🩹", correct: true, desc: "包含紗布與消毒用品，處理突發小傷口。" },
+            { id: 5, name: "行動電源", emoji: "🔋", correct: true, desc: "維持手機電力，即時獲取氣象資訊與求救。" },
+            { id: 6, name: "收音機", emoji: "📻", correct: true, desc: "網路中斷時接收廣播防災指令。" },
+            { id: 7, name: "堅固雨衣", emoji: "🌧️", correct: true, desc: "比雨傘更耐強風，10/23金門出門必備。" },
+            { id: 8, name: "乾電池", emoji: "🔋", correct: true, desc: "備用電源，供手電筒與收音機使用。" },
+            { id: 9, name: "高跟鞋", emoji: "👠", correct: false, desc: "積水與強風中容易滑倒受傷，不適合防颱。" },
+            { id: 10, name: "遊戲機", emoji: "🎮", correct: false, desc: "耗電且非生存必需品。" },
+            { id: 11, name: "冰淇淋", emoji: "🍦", correct: false, desc: "停電時會迅速融化壞掉。" },
+            { id: 12, name: "高爾夫球桿", emoji: "🏌️", correct: false, desc: "佔空間且防颱無用。" }
+        ];
+
+        let backpack = [];
+
+        function initGame() {
+            const grid = document.getElementById("itemsGrid");
+            grid.innerHTML = "";
+            items.forEach(item => {
+                const card = document.createElement("div");
+                card.className = "item-card";
+                card.draggable = true;
+                card.id = `item-${item.id}`;
+                card.innerHTML = `<div class="item-emoji">${item.emoji}</div><div class="item-name">${item.name}</div>`;
+                
+                card.addEventListener("dragstart", (e) => {
+                    e.dataTransfer.setData("text/plain", item.id);
+                });
+
+                card.addEventListener("click", () => {
+                    addItemToBackpack(item.id);
+                });
+
+                grid.appendChild(card);
+            });
+
+            updateSlots();
+        }
+
+        const backpackZone = document.getElementById("backpackZone");
+
+        backpackZone.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            backpackZone.classList.add("drag-over");
+        });
+
+        backpackZone.addEventListener("dragleave", () => {
+            backpackZone.classList.remove("drag-over");
+        });
+
+        backpackZone.addEventListener("drop", (e) => {
+            e.preventDefault();
+            backpackZone.classList.remove("drag-over");
+            const id = parseInt(e.dataTransfer.getData("text/plain"));
+            addItemToBackpack(id);
+        });
+
+        function addItemToBackpack(id) {
+            if (backpack.length >= 8) {
+                alert("背包容量已滿（最多 8 件物資）！");
+                return;
+            }
+            if (backpack.includes(id)) return;
+
+            backpack.push(id);
+            document.getElementById(`item-${id}`).style.opacity = "0.3";
+            document.getElementById(`item-${id}`).draggable = false;
+            updateSlots();
+        }
+
+        function updateSlots() {
+            const slots = document.querySelectorAll(".slot");
+            slots.forEach((slot, index) => {
+                slot.innerHTML = "";
+                if (index < backpack.length) {
+                    const itemId = backpack[index];
+                    const item = items.find(i => i.id === itemId);
+                    slot.innerHTML = `
+                        <div class="item-card" style="width:100%; height:100%; border:none; background:transparent;" onclick="removeItem(${itemId})">
+                            <div class="item-emoji" style="font-size:1.8rem;">${item.emoji}</div>
+                            <div class="item-name">${item.name}</div>
+                        </div>
+                    `;
+                }
+            });
+            document.getElementById("countBadge").innerText = `已裝 ${backpack.length} / 8`;
+        }
+
+        function removeItem(id) {
+            backpack = backpack.filter(i => i !== id);
+            const card = document.getElementById(`item-${id}`);
+            if (card) {
+                card.style.opacity = "1";
+                card.draggable = true;
+            }
+            updateSlots();
+        }
+
+        function resetGame() {
+            backpack = [];
+            initGame();
+        }
+
+        function evaluateBackpack() {
+            if (backpack.length === 0) {
+                alert("背包還是空的喔！請先挑選防颱物資。");
+                return;
+            }
+
+            let correctCount = 0;
+            let wrongCount = 0;
+            let details = [];
+
+            backpack.forEach(id => {
+                const item = items.find(i => i.id === id);
+                if (item.correct) {
+                    correctCount++;
+                    details.push(`✅ <b>${item.name}</b>：${item.desc}`);
+                } else {
+                    wrongCount++;
+                    details.push(`❌ <b>${item.name}</b>：${item.desc}`);
+                }
+            });
+
+            const score = Math.max(0, Math.round((correctCount / 8) * 100 - wrongCount * 10));
+            document.getElementById("scoreDisplay").innerText = `${score} 分`;
+            
+            let summary = `你共選擇了 <b>${correctCount}</b> 件實用物資，<b>${wrongCount}</b> 件非必要物品。<br><br>` + details.join("<br>");
+            document.getElementById("feedbackDisplay").innerHTML = summary;
+
+            document.getElementById("resultModal").classList.add("active");
+
+            if (score >= 80 && typeof confetti === 'function') {
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            }
+        }
+
+        function closeModal() {
+            document.getElementById("resultModal").classList.remove("active");
+            resetGame();
+        }
+
+        window.onload = initGame;
+    </script>
+</body>
+</html>
